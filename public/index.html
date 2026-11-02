@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>모둠 대항전 초성 퀴즈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#4a3020;font-family:'Gaegu','Nanum Pen Script',cursive;color:#f4f1e8;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+#frame{position:absolute;inset:0;display:flex;flex-direction:column;background:#6b4423;padding:calc(2vmin + env(safe-area-inset-top)) calc(2vmin + env(safe-area-inset-right)) 0 calc(2vmin + env(safe-area-inset-left))}
+#board{flex:1;position:relative;background:#2f5a3a;border:1.4vmin solid #8b5a2b;border-radius:.6vmin;overflow:hidden;box-shadow:inset 0 0 8vmin rgba(0,0,0,.35);transition:border-color .3s}
+#board::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 20% 30%,rgba(255,255,255,.05),transparent 45%),radial-gradient(ellipse at 75% 70%,rgba(255,255,255,.04),transparent 50%);pointer-events:none}
+#board.myturn{border-color:#e8b34a}
+#tray{height:calc(6vmin + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#8b5a2b;border-top:.7vmin solid #a56c36;display:flex;align-items:center;gap:2.2vmin;padding-left:28%}
+.chalk{width:7vmin;height:1.5vmin;border-radius:.75vmin;background:#f4f1e8}
+.chalk.y{background:#ffd166;width:5vmin}.chalk.p{background:#f4a6b8;width:4vmin}
+.eraser{width:13vmin;height:3.6vmin;background:#3b3b3b;border-radius:.5vmin;border-top:1.6vmin solid #c9a66b;margin-left:2vmin}
+
+.deco{position:absolute;font-size:3vmin;line-height:1.4}
+.deco h3{font-size:3.3vmin;font-weight:700;border-bottom:.3vmin dashed rgba(244,241,232,.5);margin-bottom:.5vmin;padding-bottom:.2vmin}
+.tl{left:3vmin;top:2.4vmin}.tr{right:3vmin;top:2.4vmin;text-align:right}.br{right:3vmin;bottom:2.4vmin;text-align:right}
+
+#topArea{position:absolute;top:2.4vmin;left:50%;transform:translateX(-50%);width:56%;text-align:center}
+#label{font-size:3vmin;color:#c8e6a0;min-height:3.6vmin}
+#words{display:flex;flex-wrap:wrap;justify-content:center;gap:.2vmin 2.4vmin;font-size:4vmin;margin-top:.4vmin;max-height:14vmin;overflow:hidden}
+#words span{animation:pop .3s}
+
+#center{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);width:62%;text-align:center}
+.screen{display:none}.screen.on{display:block}
+.big{font-size:9vmin;font-weight:700;line-height:1.1}
+.mid{font-size:5vmin;line-height:1.4}
+.small{font-size:3.4vmin;color:#c8e6a0;line-height:1.5}
+.btn{font-family:inherit;font-size:4.2vmin;font-weight:700;padding:1vmin 3.4vmin;background:#ffd166;color:#3a2716;border:none;border-radius:1vmin;cursor:pointer}
+.btn.ghost{background:transparent;color:#c8e6a0;font-size:3vmin;text-decoration:underline;padding:.5vmin}
+.chalkInput{font-family:inherit;font-size:5.2vmin;height:8.6vmin;background:rgba(0,0,0,.18);border:.45vmin solid #f4f1e8;border-radius:1vmin;color:#f4f1e8;text-align:center;outline:none;-webkit-user-select:text;user-select:text}
+.chalkInput:focus{border-color:#ffd166}
+.chalkInput[readonly]{border-style:dashed;opacity:.9}
+.row{display:flex;gap:1.6vmin;justify-content:center;align-items:center;margin-top:2vmin}
+.msg{font-size:3.4vmin;min-height:4.6vmin;color:#ffb4a8;margin-top:1.2vmin}
+
+#cho{font-size:23vmin;line-height:1;font-weight:700;letter-spacing:3vmin;padding-left:3vmin}
+#status{font-size:3.8vmin;color:#c8e6a0;margin-bottom:.6vmin;min-height:5vmin}
+#board.myturn #status{color:#ffd166;font-weight:700}
+#answer{width:36vmin}
+#timer{font-size:5.4vmin;color:#ffd166;min-width:10vmin;text-align:left}
+#timer.hurry{color:#ff8a80}
+#defeat{display:none;font-size:3.4vmin;background:rgba(0,0,0,.25);border:.3vmin dashed #ffb4a8;color:#ffb4a8;border-radius:1vmin;padding:.4vmin 2vmin;margin-top:1.2vmin}
+#defeat.on{display:inline-block}
+
+#lobbyNums{display:flex;flex-wrap:wrap;justify-content:center;gap:1.4vmin;margin:2vmin auto 1.6vmin;max-width:90%}
+.num{width:7vmin;height:7vmin;border:.35vmin solid #f4f1e8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:3.8vmin;font-weight:700;animation:pop .3s}
+.num.me{background:#ffd166;color:#3a2716;border-color:#ffd166}
+#modeBadge{color:#ffd166;font-weight:700}
+.num{width:auto!important;padding:0 2.6vmin;border-radius:3.5vmin!important}
+#count{font-size:22vmin;font-weight:700;line-height:1;color:#ffd166}
+
+#tags{position:absolute;bottom:3vmin;left:50%;transform:translateX(-50%);display:flex;gap:3vmin;align-items:flex-end}
+.tagwrap{text-align:center}
+.tag{background:#f4f1e8;color:#2f5a3a;border-radius:.8vmin;padding:.8vmin 2.2vmin;font-size:3.6vmin;font-weight:700;transition:transform .3s,background .3s;transform-origin:bottom center;position:relative}
+.tag.me::after{content:"나";position:absolute;top:-1.6vmin;right:-1.6vmin;background:#f4a6b8;color:#3a2716;font-size:2.2vmin;border-radius:50%;width:3.4vmin;height:3.4vmin;display:flex;align-items:center;justify-content:center}
+.tag.now{transform:scale(1.5);background:#ffd166;color:#3a2716}
+.tag.out{background:#9a9890;color:#4a4a46;text-decoration:line-through}
+.loss{font-size:2.8vmin;height:3.6vmin;color:#ffb4a8;margin-top:.4vmin}
+
+#popup{position:absolute;inset:0;background:rgba(20,40,25,.72);display:none;align-items:center;justify-content:center}
+#popup.on{display:flex}
+.pcard{background:#f4f1e8;color:#2f3a2f;border-radius:2vmin;padding:3vmin 5vmin;max-width:70%;text-align:center;animation:pop .25s}
+.pwho{font-size:3.2vmin;color:#7a6a50}
+.pword{font-size:10vmin;font-weight:700;color:#2f5a3a;line-height:1.1}
+.pdef{font-size:4vmin;margin-top:1.4vmin;line-height:1.4}
+
+table.res{margin:1.6vmin auto 0;border-collapse:collapse;font-size:3.4vmin}
+table.res th,table.res td{padding:.5vmin 2.4vmin;border-bottom:.25vmin dashed rgba(244,241,232,.4)}
+table.res th{color:#c8e6a0;font-weight:400}
+tr.meRow td{color:#ffd166;font-weight:700}
+
+#rotate{display:none;position:fixed;inset:0;background:#2f5a3a;color:#f4f1e8;font-size:6vmin;align-items:center;justify-content:center;text-align:center;z-index:9;padding:5vmin}
+@media (orientation:portrait){#rotate{display:flex}}
+#netBar{display:none;position:fixed;top:0;left:0;right:0;z-index:8;background:#c0392b;color:#fff;text-align:center;font-size:2.6vmin;padding:1vmin;font-weight:700}
+#netBar.on{display:block}
+.num.away{opacity:.35}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="board">
+    <div class="deco tl"><h3>오늘의 시간표</h3>1 국어<br>2 수학<br>3 국어<br>4 수학<br>5 국어<br>6 수학</div>
+    <div class="deco tr"><h3>오늘의 급식</h3>밥<br>국<br>김치</div>
+    <div class="deco br"><h3>떠든 학생</h3>김XX, 박XX, 이XX</div>
+
+    <div id="topArea"><div id="label"></div><div id="words"></div></div>
+
+    <div id="center">
+      <div class="screen" id="scLogin">
+        <div class="big">모둠 대항전 초성 퀴즈</div>
+        <div class="small" style="margin-top:1vmin">우리 모둠 번호를 쓰고 입장하세요 (모둠당 태블릿 1대)</div>
+        <div class="row">
+          <input id="numInput" class="chalkInput" style="width:20vmin" type="number" inputmode="numeric" min="1" max="6" placeholder="모둠">
+          <button class="btn" id="loginBtn">입장</button>
+        </div>
+        <div class="msg" id="loginMsg"></div>
+      </div>
+
+      <div class="screen" id="scLobby">
+        <div class="mid" id="modeBadge"></div>
+        <div class="mid">입장한 모둠 <span id="lobbyCount"></span></div>
+        <div id="lobbyNums"></div>
+        <div class="small">선생님이 게임을 시작할 때까지 기다려주세요</div>
+        <button class="btn ghost" id="logoutBtn">모둠 바꾸기</button>
+      </div>
+
+      <div class="screen" id="scAssign">
+        <div class="mid">곧 시작합니다!</div>
+        <div id="count"></div>
+        <div class="mid" id="assignRoom"></div>
+        <div class="small" id="assignMates"></div>
+      </div>
+
+      <div class="screen" id="scPlay">
+        <div id="status"></div>
+        <div id="cho"></div>
+        <form class="row" id="answerForm" autocomplete="off" novalidate>
+          <input id="answer" class="chalkInput" type="text" maxlength="10" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send">
+          <button class="btn" id="submitBtn" type="submit">제출</button>
+          <div id="timer"></div>
+        </form>
+        <div class="msg" id="playMsg"></div>
+        <div id="defeat">패배했어요 · 친구들 게임을 구경해요</div>
+      </div>
+
+      <div class="screen" id="scWait"><div class="mid" id="waitText"></div></div>
+
+      <div class="screen" id="scResult">
+        <div class="big">게임 종료!</div>
+        <div class="small" id="endReason"></div>
+        <div class="mid" id="myResult" style="margin-top:1vmin"></div>
+        <table class="res" id="resTable"></table>
+      </div>
+    </div>
+
+    <div id="tags"></div>
+
+    <div id="popup"><div class="pcard">
+      <div class="pwho" id="pWho"></div>
+      <div class="pword" id="pWord"></div>
+      <div class="pdef" id="pDef"></div>
+    </div></div>
+  </div>
+  <div id="tray"><div class="chalk"></div><div class="chalk y"></div><div class="chalk p"></div><div class="eraser"></div></div>
+</div>
+<div id="netBar">연결이 끊겼어요. 다시 연결하는 중… (화면을 끄지 말고 기다려주세요)</div>
+<div id="rotate">태블릿을 가로로 돌려주세요</div>
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const socket = io();
+let S = null;
+let me = parseInt(sessionStorage.getItem('teamNum') || '', 10) || null;
+let token = localStorage.getItem('teamToken');
+if (!token) { token = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('teamToken', token); }
+let myTurnPrev = false;
+const timer = { running: false, deadline: 0, frozen: 0 };
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function show(name) { document.querySelectorAll('.screen').forEach(el => el.classList.toggle('on', el.id === 'sc' + name)); }
+function wait(html) { $('waitText').innerHTML = html; show('Wait'); }
+
+// ---------- 로그인 ----------
+function login(num) {
+  socket.emit('teamLogin', { num, token }, res => {
+    if (res && res.ok) { me = res.num; sessionStorage.setItem('teamNum', me); $('loginMsg').textContent = ''; }
+    else { me = null; sessionStorage.removeItem('teamNum'); $('loginMsg').textContent = (res && res.msg) || '입장하지 못했어요. 다시 해보세요.'; }
+    render();
+  });
+}
+$('loginBtn').onclick = () => {
+  const n = parseInt($('numInput').value, 10);
+  if (!n) { $('loginMsg').textContent = '모둠 번호를 입력해주세요.'; return; }
+  login(n);
+};
+$('numInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('numInput').addEventListener('input', () => { $('loginMsg').textContent = ''; });
+$('logoutBtn').onclick = () => { socket.emit('teamLogout'); me = null; sessionStorage.removeItem('teamNum'); render(); };
+
+socket.on('connect', () => { $('netBar').classList.remove('on'); if (me) login(me); });
+socket.on('disconnect', () => { $('netBar').classList.add('on'); });
+socket.on('state', s => { S = s; render(); });
+socket.on('typing', ({ text }) => {
+  if (!S) return;
+  S.room.typing = text;
+  if (S.room.current !== me) $('answer').value = text;
+});
+
+// ---------- 정답 입력 ----------
+function isMyTurn() { const r = S && S.room; return !!(r && S.phase === 'playing' && r.status === 'live' && r.current === me && !r.checking && !r.popup); }
+let composing = false, pendingSubmit = false, lastSubmit = 0;
+const ansEl = $('answer');
+ansEl.addEventListener('compositionstart', () => { composing = true; });
+ansEl.addEventListener('compositionend', () => {
+  composing = false;
+  if (pendingSubmit) { pendingSubmit = false; setTimeout(submit, 0); }
+});
+function requestSubmit() {
+  if (composing) {
+    pendingSubmit = true;
+    ansEl.blur();
+    setTimeout(() => { if (pendingSubmit) { pendingSubmit = false; submit(); } }, 200);
+  } else submit();
+}
+function submit() {
+  if (!isMyTurn()) return;
+  if (Date.now() - lastSubmit < 500) return;
+  const w = ansEl.value.replace(/\s/g, '');
+  if (!w) { $('playMsg').textContent = '단어를 입력해주세요.'; ansEl.focus(); return; }
+  lastSubmit = Date.now();
+  $('playMsg').textContent = '';
+  socket.timeout(30000).emit('submitWord', w, (err, res) => {
+    if (err) { $('playMsg').textContent = '연결이 불안정해요. 다시 제출해 주세요.'; return; }
+    if (res && !res.ok && res.msg) { $('playMsg').textContent = res.msg; setTimeout(() => ansEl.focus(), 50); }
+  });
+}
+$('answerForm').addEventListener('submit', e => { e.preventDefault(); requestSubmit(); });
+ansEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.isComposing || composing)) { e.preventDefault(); pendingSubmit = true; }
+});
+$('submitBtn').addEventListener('pointerdown', e => { if (!composing) e.preventDefault(); });
+let typingT = null;
+function sendTyping() { typingT = null; if (isMyTurn()) socket.emit('typing', ansEl.value); }
+ansEl.addEventListener('input', () => { if (isMyTurn()) { $('playMsg').textContent = ''; if (!typingT) typingT = setTimeout(sendTyping, 120); } });
+
+// ---------- 화면 그리기 ----------
+function render() {
+  const board = $('board');
+  board.classList.remove('myturn');
+  $('popup').classList.remove('on');
+  if (!me) { show('Login'); clearTop(); myTurnPrev = false; return; }
+  if (!S) return;
+  const st = S.stats[me];
+  if (S.phase === 'lobby') { renderLobby(); clearTop(); myTurnPrev = false; return; }
+  if (!st) { wait('게임이 진행 중이에요.<br><span class="small">다음 게임을 기다려주세요</span>'); clearTop(); myTurnPrev = false; return; }
+  const room = S.room;
+
+  if (S.phase === 'assigning') {
+    show('Assign'); clearTop();
+    $('count').textContent = S.countdown;
+    $('assignRoom').textContent = `우리는 ${me}모둠!  이번 게임은 「${S.modeLabel}」만 정답!`;
+    $('assignMates').textContent = '참가 모둠: ' + S.members.map(n => n + '모둠').join(', ');
+    myTurnPrev = false; return;
+  }
+  if (S.phase === 'gameOver') { renderResult(st); clearTop(); myTurnPrev = false; return; }
+
+  $('label').textContent = `${S.round}라운드 · ${S.modeLabel} 모드`;
+  $('words').innerHTML = room.words.map(w => `<span>${esc(w.word)}</span>`).join('');
+  renderTags(room);
+
+  if (room.status === 'live') { show('Play'); renderPlay(room, st); }
+  else {
+    myTurnPrev = false;
+    const lostMe = room.lastLoser === me;
+    let note = room.lastLoser != null ? `${room.lastLoser}모둠이 라운드 탈락했어요` : `모두 ${S.laps}바퀴 성공!`;
+    if (lostMe) note = st.defeated ? '라운드 탈락! 탈락 2번으로 패배했어요' : '앗, 우리 모둠 라운드 탈락! (1번 남았어요)';
+    wait(`${S.round}라운드 종료!<br><span class="small">${esc(note)}<br>선생님이 다음 라운드를 시작할 때까지 기다려주세요</span>`);
+  }
+}
+function clearTop() { $('label').textContent = ''; $('words').innerHTML = ''; $('tags').innerHTML = ''; }
+
+function renderLobby() {
+  show('Lobby');
+  $('modeBadge').textContent = `이번 게임: ${S.modeLabel} 모드 (${S.modeLabel}만 정답!)`;
+  $('lobbyCount').textContent = `(${S.online.length}모둠)`;
+  $('lobbyNums').innerHTML = S.online.map(n => `<div class="num ${n === me ? 'me' : ''} ${(S.away || []).includes(n) ? 'away' : ''}">${n}모둠</div>`).join('');
+}
+
+function renderTags(room) {
+  const list = room.order.length ? room.order.concat(S.members.filter(n => !room.order.includes(n))) : S.members;
+  $('tags').innerHTML = list.map(n => {
+    const s = S.stats[n];
+    const cls = [s.defeated ? 'out' : '', room.current === n ? 'now' : '', n === me ? 'me' : ''].join(' ');
+    return `<div class="tagwrap"><div class="tag ${cls}">${n}모둠</div><div class="loss">${s.defeated ? '패배' : '✕'.repeat(s.losses)}</div></div>`;
+  }).join('');
+}
+
+function renderPlay(room, st) {
+  const myTurn = room.current === me;
+  const ans = $('answer');
+  $('cho').textContent = S.chosung;
+  $('defeat').classList.toggle('on', !!st.defeated);
+  if (myTurn) $('board').classList.add('myturn');
+
+  let status;
+  if (room.popup) status = `${room.popup.num}모둠 정답!`;
+  else if (room.checking) status = myTurn ? '사전에서 찾는 중…' : `${room.current}모둠 답을 사전에서 찾는 중…`;
+  else if (room.current == null) status = '다른 모둠 연결을 기다리는 중…';
+  else if (myTurn) status = `우리 모둠 차례! ${S.modeLabel} 단어를 써주세요`;
+  else status = `${room.current}모둠 차례`;
+  $('status').textContent = status;
+
+  const canType = myTurn && !room.checking && !room.popup;
+  ans.readOnly = !canType;
+  $('submitBtn').style.visibility = canType ? 'visible' : 'hidden';
+  if (myTurn && !myTurnPrev) { ans.value = ''; $('playMsg').textContent = ''; setTimeout(() => ans.focus(), 50); }
+  if (!myTurn) { ans.value = room.typing || ''; $('playMsg').textContent = ''; if (document.activeElement === ans) ans.blur(); }
+  myTurnPrev = myTurn;
+
+  if (room.current != null && !room.checking && !room.popup) { timer.running = true; timer.deadline = Date.now() + room.remaining; }
+  else { timer.running = false; timer.frozen = room.remaining; }
+
+  if (room.popup) {
+    $('pWho').textContent = `${room.popup.num}모둠 정답!`;
+    $('pWord').textContent = room.popup.word;
+    $('pDef').textContent = room.popup.def || '';
+    $('popup').classList.add('on');
+  }
+}
+
+function renderResult(st) {
+  show('Result');
+  $('endReason').textContent = S.endReason || '';
+  const rank = S.ranking.indexOf(me) + 1;
+  $('myResult').textContent = `우리 모둠은 ${rank}위! (${st.defeated ? '패배' : '생존'} · 맞힌 단어 ${st.correct}개)`;
+  const rows = S.ranking.map((n, i) => {
+    const s = S.stats[n];
+    return `<tr class="${n === me ? 'meRow' : ''}"><td>${i + 1}위</td><td>${n}모둠</td><td>${s.defeated ? '패배' : '생존'}</td><td>${s.losses}</td><td>${s.correct}</td></tr>`;
+  }).join('');
+  $('resTable').innerHTML = `<tr><th>순위</th><th>모둠</th><th>결과</th><th>라운드 탈락</th><th>맞힌 단어</th></tr>${rows}`;
+}
+
+setInterval(() => {
+  const ms = timer.running ? Math.max(0, timer.deadline - Date.now()) : timer.frozen;
+  $('timer').textContent = Math.ceil(ms / 1000) + '초';
+  $('timer').classList.toggle('hurry', ms <= 3000);
+}, 100);
+
+render();
+</script>
+</body>
+</html>

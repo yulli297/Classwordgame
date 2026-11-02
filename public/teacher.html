@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모둠 대항전 관제실</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#141614;color:#e8e6df;font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;min-height:100vh}
+header{display:flex;align-items:center;gap:16px;padding:12px 20px;background:#1d201d;border-bottom:1px solid #2e332e;position:sticky;top:0;z-index:2}
+.rec{color:#e24b4a;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+h1{font-size:18px;font-weight:600}
+#info{color:#a8b5a0;font-size:15px}
+#curCho{font-size:22px;font-weight:700;color:#ffd166;letter-spacing:4px}
+.sp{flex:1}
+button{font-family:inherit;font-size:15px;padding:9px 16px;border-radius:8px;border:1px solid #4a524a;background:#262a26;color:#e8e6df;cursor:pointer}
+button:hover{background:#30352f}
+button.primary{background:#ffd166;color:#2c2210;border-color:#ffd166;font-weight:700}
+button.danger{border-color:#7a3030;color:#f09595}
+.hide{display:none!important}
+.cell.away{background:#4a3a1e;color:#ffd166;outline:1px dashed #ffd166}
+#netBar{display:none;background:#c0392b;color:#fff;text-align:center;padding:8px;font-weight:700}
+#netBar.on{display:block}
+#dictWarn{color:#f0a868;font-size:14px}
+main{padding:20px}
+
+/* 대기실 */
+#lobby{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px;max-width:1200px;margin:0 auto}
+.card{background:#1d201d;border:1px solid #2e332e;border-radius:12px;padding:20px}
+.card h2{font-size:17px;margin-bottom:12px;font-weight:600}
+.hint{font-size:13px;color:#8a948a;line-height:1.6;margin-bottom:12px}
+.choRow{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.choRow label{width:70px;color:#a8b5a0}
+.choRow input{flex:1;font-size:22px;letter-spacing:4px;padding:8px 12px;border-radius:8px;border:1px solid #4a524a;background:#141614;color:#ffd166;font-family:inherit}
+.choRow input.bad{border-color:#e24b4a}
+#numGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px}
+.cell{aspect-ratio:1.4;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#262a26;color:#5f665f;font-weight:600;font-size:16px}
+.cell.on{background:#2f5a3a;color:#f4f1e8;outline:1px solid #6fae7d}
+#startMsg,#dictOut{font-size:14px;line-height:1.7;margin-top:10px;color:#f0c27a;white-space:pre-line}
+.btnRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+
+/* 카운트다운 */
+#assign{text-align:center;padding-top:12vh}
+#assign .t{font-size:28px;color:#a8b5a0}
+#assignCount{font-size:160px;font-weight:700;color:#ffd166;line-height:1.2}
+
+/* CCTV */
+#monitor{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{background:#0f1a12;border:1px solid #2e332e;border-radius:6px;aspect-ratio:16/10;position:relative;padding:12px;overflow:hidden;font-variant-numeric:tabular-nums}
+.tile::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);pointer-events:none}
+.tile.done{opacity:.75}.tile.finished{opacity:.55}
+.th{display:flex;justify-content:space-between;font-size:13px;color:#9fd1a8}
+.turn{text-align:center;font-size:20px;margin-top:6%;min-height:30px}
+.turn .tt{color:#ffd166}
+.typing{text-align:center;font-size:30px;font-weight:700;color:#ffd166;min-height:42px;margin-top:4px}
+.twords{text-align:center;font-size:14px;color:#c8e6a0;margin-top:6px;line-height:1.6;max-height:46px;overflow:hidden}
+.ttags{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.tg{background:#f4f1e8;color:#2f5a3a;border-radius:4px;padding:2px 9px;font-size:14px;font-weight:700}
+.tg.l1{background:#ffd166;color:#3a2716}
+.tg.out{background:#5f5e5a;color:#b4b2a9;text-decoration:line-through}
+.tg.now{outline:2px solid #ffd166;outline-offset:2px}
+
+.modeRow{display:flex;gap:10px;margin-bottom:14px}
+.modeRow label{flex:1;text-align:center;padding:12px;border-radius:10px;border:2px solid #4a524a;cursor:pointer;font-size:17px;font-weight:600}
+.modeRow input{display:none}
+.modeRow input:checked+span{color:#ffd166}
+.modeRow label:has(input:checked){border-color:#ffd166;background:#2a2616}
+#bigTile{background:#0f1a12;border:1px solid #2e332e;border-radius:10px;padding:24px;max-width:1000px;margin:0 auto;position:relative;overflow:hidden;font-variant-numeric:tabular-nums}
+#bigTile .th{font-size:16px}
+#bigTile .turn{font-size:34px;margin-top:20px}
+#bigTile .typing{font-size:60px;min-height:80px;margin-top:10px}
+#bigTile .twords{font-size:22px;max-height:none;margin:16px 0 56px;line-height:1.8}
+#bigTile .ttags{position:static;margin-top:10px}
+#bigTile .tg{font-size:20px;padding:4px 14px}
+/* 결과 */
+#results{max-width:1200px;margin:0 auto}
+#survivors{font-size:18px;margin-bottom:16px;line-height:1.7}
+#survivors b{color:#ffd166}
+#resGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:7px 6px;border-bottom:1px solid #2e332e;text-align:center}
+th{color:#8a948a;font-weight:500;font-size:13px}
+td.live{color:#9fd1a8;font-weight:700}td.dead{color:#f09595}
+@media (max-width:900px){#lobby{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <span class="rec">●</span>
+  <h1>모둠 대항전 관제실</h1>
+  <span id="info"></span>
+  <span id="curCho"></span>
+  <span id="dictWarn"></span>
+  <span class="sp"></span>
+  <span id="nextInfo" style="color:#8a948a;font-size:14px"></span>
+  <button class="primary hide" id="nextBtn">다음 라운드 시작</button>
+  <button class="danger hide" id="endBtn">게임 끝내기</button>
+  <button class="danger hide" id="initBtn">게임 초기화</button>
+  <button class="hide" id="resetBtn">새 게임 준비</button>
+</header>
+
+<div id="netBar">서버 연결이 끊겼어요. 다시 연결하는 중…</div>
+<main>
+  <section id="lobby">
+    <div class="card">
+      <h2>정답 인정 모드</h2>
+      <div class="modeRow">
+        <label><input type="radio" name="mode" value="native"><span>고유어 모드</span></label>
+        <label><input type="radio" name="mode" value="chinese"><span>한자어 모드</span></label>
+      </div>
+      <p class="hint">고른 모드에 맞는 단어만 정답으로 인정해요 (표준국어대사전 기준). 외래어와 고유어·한자어가 섞인 혼종어는 두 모드 모두에서 인정하지 않아요.</p>
+      <h2>라운드별 초성</h2>
+      <p class="hint">자음만 입력하세요 (예: ㅎㄱ). ㄱ과 ㅅ을 이어 쳐서 ㄳ처럼 합쳐져도 자동으로 나눠져요.</p>
+      <div id="choInputs"></div>
+    </div>
+    <div class="card">
+      <h2>접속한 모둠 <span id="onCount"></span></h2>
+      <p class="hint">모둠마다 태블릿 1대로 모둠 번호를 입력해 들어와요. 모두 들어오면 게임 시작을 눌러주세요. 모든 모둠이 한 방에서 번갈아 답해요.</p>
+      <div id="numGrid"></div>
+      <div class="btnRow">
+        <button class="primary" id="startBtn">게임 시작</button>
+        <button id="testBtn">사전 연결 테스트</button>
+      </div>
+      <div id="startMsg"></div>
+      <div id="dictOut"></div>
+    </div>
+  </section>
+
+  <section id="assign" class="hide">
+    <div class="t" id="assignText">곧 시작합니다.</div>
+    <div id="assignCount"></div>
+  </section>
+
+  <section id="monitor" class="hide"><div id="bigTile"></div></section>
+
+  <section id="results" class="hide">
+    <div class="card" style="margin-bottom:12px">
+      <h2>게임 결과</h2>
+      <div id="endReason" class="hint"></div>
+      <div id="survivors"></div>
+    </div>
+    <div class="card"><table id="resTable"></table></div>
+  </section>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const socket = io();
+let S = null, INFO = null, inputsBuilt = false, timerAt = null;
+const SPLIT = { 'ㄳ':'ㄱㅅ','ㄵ':'ㄴㅈ','ㄶ':'ㄴㅎ','ㄺ':'ㄹㄱ','ㄻ':'ㄹㅁ','ㄼ':'ㄹㅂ','ㄽ':'ㄹㅅ','ㄾ':'ㄹㅌ','ㄿ':'ㄹㅍ','ㅀ':'ㄹㅎ','ㅄ':'ㅂㅅ' };
+const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+function norm(s) { return String(s || '').replace(/\s/g, '').split('').map(c => SPLIT[c] || c).join(''); }
+function validCho(s) { return s.length >= 1 && s.length <= 6 && s.split('').every(c => CHO.includes(c)); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showOnly(id) { ['lobby', 'assign', 'monitor', 'results'].forEach(x => $(x).classList.toggle('hide', x !== id)); }
+
+socket.on('connect', () => { $('netBar').classList.remove('on'); socket.emit('teacherJoin'); });
+socket.on('disconnect', () => $('netBar').classList.add('on'));
+socket.on('teacherInfo', info => { INFO = info; buildInputs(); });
+socket.on('state', s => { S = s; render(); });
+socket.on('typing', ({ text }) => {
+  if (!S) return;
+  S.room.typing = text;
+  const el = $('ty'); if (el) el.textContent = text;
+});
+
+// ---------- 설정 ----------
+let saveT = null;
+function buildInputs() {
+  if (!INFO) return;
+  const box = $('choInputs');
+  if (!inputsBuilt) {
+    box.innerHTML = INFO.chosungList.map((c, i) =>
+      `<div class="choRow"><label>${i + 1}라운드</label><input data-i="${i}" maxlength="8" autocomplete="off"></div>`).join('');
+    box.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', () => { clearTimeout(saveT); saveT = setTimeout(saveCho, 600); inp.classList.remove('bad'); });
+      inp.addEventListener('blur', () => { inp.value = norm(inp.value); saveCho(); });
+    });
+    inputsBuilt = true;
+  }
+  box.querySelectorAll('input').forEach((inp, i) => { if (document.activeElement !== inp) inp.value = INFO.chosungList[i] || ''; });
+  $('dictOut').textContent = INFO.hasKey ? '' : '사전 키가 없어요. Render 환경변수 STDICT_KEY를 확인해주세요.';
+}
+function getCho() { return [...$('choInputs').querySelectorAll('input')].map(i => norm(i.value)); }
+function saveCho() { socket.emit('saveChosung', getCho()); }
+document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', () => socket.emit('setMode', r.value)));
+
+$('startBtn').onclick = () => {
+  const list = getCho();
+  let bad = false;
+  $('choInputs').querySelectorAll('input').forEach((inp, i) => { const ok = validCho(list[i]); inp.classList.toggle('bad', !ok); if (!ok) bad = true; });
+  if (bad) { $('startMsg').textContent = '빨간 칸의 초성을 자음으로만 채워주세요.'; return; }
+  $('startMsg').textContent = '';
+  socket.emit('startGame', list, res => { if (!res.ok) $('startMsg').textContent = res.msg; });
+};
+$('testBtn').onclick = () => {
+  $('dictOut').textContent = '사전에 연결해서 고유어/한자어 판정을 시험하는 중…';
+  socket.emit('testDict', out => { $('dictOut').textContent = out.join('\n'); });
+};
+$('nextBtn').onclick = () => socket.emit('nextRound');
+$('endBtn').onclick = () => { if (confirm('지금 게임을 끝내고 결과를 볼까요?')) socket.emit('forceEnd'); };
+$('initBtn').onclick = () => { if (confirm('정말 초기화할까요?\n지금 게임 기록은 모두 사라지고, 모둠들은 대기실로 돌아가요.\n(모둠 접속과 초성은 그대로 유지돼요)')) socket.emit('resetGame'); };
+$('resetBtn').onclick = () => { if (S.phase === 'gameOver' || confirm('새 게임을 준비할까요? 지금 기록은 사라져요.')) socket.emit('resetGame'); };
+
+// ---------- 화면 그리기 ----------
+function render() {
+  if (!S) return;
+  const p = S.phase;
+  $('nextBtn').classList.toggle('hide', p !== 'roundEnd');
+  const playing = p === 'assigning' || p === 'playing' || p === 'roundEnd';
+  $('endBtn').classList.toggle('hide', !playing);
+  $('initBtn').classList.toggle('hide', !playing);
+  $('resetBtn').classList.toggle('hide', p !== 'gameOver');
+  $('curCho').textContent = S.chosung || '';
+  $('dictWarn').textContent = S.dictFails ? `사전 연결 실패 ${S.dictFails}번 (모둠에 다시 제출 안내됨)` : '';
+  $('nextInfo').textContent = (p === 'roundEnd' && INFO) ? `다음 초성: ${INFO.chosungList[S.round] || ''}` : '';
+  document.querySelectorAll('input[name=mode]').forEach(r => { r.checked = r.value === S.mode; r.disabled = p !== 'lobby'; });
+
+  if (p === 'lobby') {
+    showOnly('lobby');
+    $('info').textContent = `대기실 · ${S.modeLabel} 모드`;
+    $('onCount').textContent = `(${S.online.length}모둠)`;
+    let html = '';
+    for (let n = 1; n <= S.maxTeams; n++) html += `<div class="cell ${(S.away || []).includes(n) ? 'away' : (S.online.includes(n) ? 'on' : '')}">${n}모둠</div>`;
+    $('numGrid').innerHTML = html;
+  } else if (p === 'assigning') {
+    showOnly('assign');
+    $('info').textContent = `시작 준비 · ${S.modeLabel} 모드`;
+    $('assignCount').textContent = S.countdown;
+  } else if (p === 'gameOver') {
+    showOnly('results');
+    $('info').textContent = '게임 종료';
+    renderResults();
+  } else {
+    showOnly('monitor');
+    $('info').textContent = `${S.round}라운드 / ${S.totalRounds} · ${S.modeLabel} 모드` + (p === 'roundEnd' ? ' · 라운드 종료' : '');
+    renderMonitor();
+  }
+}
+
+function renderMonitor() {
+  const r = S.room;
+  let head, turn;
+  if (r.status === 'live') {
+    head = `${r.lap}/${S.laps}바퀴 · 단어 ${r.words.length}개`;
+    if (r.popup) turn = `<span style="color:#9fd1a8">${r.popup.num}모둠 정답! ${esc(r.popup.word)}</span>`;
+    else if (r.checking) turn = `${r.current}모둠 사전 확인 중…`;
+    else if (r.current == null) turn = `<span style="color:#f0a868">모든 모둠 연결 끊김 · 다시 들어오길 기다리는 중</span>`;
+    else turn = `${r.current}모둠 차례 · <span class="tt" id="tt"></span>`;
+  } else {
+    head = '라운드 종료';
+    turn = r.lastLoser != null ? `${r.lastLoser}모둠 라운드 탈락` : `${S.laps}바퀴 모두 성공`;
+  }
+  const typing = (r.status === 'live' && !r.popup) ? esc(r.typing) : '';
+  const list = r.order.length ? r.order : S.members;
+  const tags = S.members.map(n => {
+    const s = S.stats[n];
+    const cls = s.defeated ? 'out' : (s.losses > 0 ? 'l1' : '');
+    return `<span class="tg ${cls} ${r.current === n ? 'now' : ''}">${n}모둠${s.defeated ? '' : (s.losses ? ' ✕' : '')} · ${s.correct}개</span>`;
+  }).join('');
+  $('bigTile').innerHTML = `
+    <div class="th"><span><span class="rec">●</span> ${esc(S.modeLabel)} 모드 · 초성 ${esc(S.chosung)}</span><span>${head}</span></div>
+    <div class="turn">${turn}</div>
+    <div class="typing" id="ty">${typing}</div>
+    <div class="twords">${r.words.map(w => `${esc(w.word)}<small style="color:#6fae7d">(${w.num})</small>`).join(' · ')}</div>
+    <div class="ttags">${tags}</div>`;
+  timerAt = (r.status === 'live' && r.current != null && !r.checking && !r.popup) ? Date.now() + r.remaining : null;
+  tick();
+}
+
+function renderResults() {
+  $('endReason').textContent = S.endReason || '';
+  const alive = S.ranking.filter(n => !S.stats[n].defeated);
+  $('survivors').innerHTML = `1위: <b>${S.ranking[0] || '-'}모둠</b> · 살아남은 모둠 (${alive.length}): <b>${alive.map(n => n + '모둠').join(', ') || '없음'}</b>`;
+  const rows = S.ranking.map((n, i) => {
+    const s = S.stats[n];
+    return `<tr><td>${i + 1}위</td><td>${n}모둠</td><td class="${s.defeated ? 'dead' : 'live'}">${s.defeated ? '패배' : '생존'}</td><td>${s.losses}</td><td>${s.correct}</td></tr>`;
+  }).join('');
+  $('resTable').innerHTML = `<tr><th>순위</th><th>모둠</th><th>결과</th><th>라운드 탈락</th><th>맞힌 단어</th></tr>${rows}`;
+}
+
+function tick() {
+  const el = $('tt');
+  if (el && timerAt) el.textContent = Math.ceil(Math.max(0, timerAt - Date.now()) / 1000) + '초';
+}
+setInterval(tick, 200);
+</script>
+</body>
+</html>
