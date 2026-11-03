@@ -263,7 +263,7 @@ function render() {
   else {
     myTurnPrev = false;
     const lostMe = room.lastLoser === me;
-    let note = room.lastLoser != null ? `${room.lastLoser}모둠이 라운드 탈락했어요` : `모두 ${S.laps}바퀴 성공!`;
+    let note = room.lastLoser != null ? `${room.lastLoser}모둠이 라운드 탈락했어요` : '라운드가 끝났어요';
     if (lostMe) note = st.defeated ? '라운드 탈락! 탈락 2번으로 패배했어요' : '앗, 우리 모둠 라운드 탈락! (1번 남았어요)';
     wait(`${S.round}라운드 종료!<br><span class="small">${esc(note)}<br>선생님이 다음 라운드를 시작할 때까지 기다려주세요</span>`);
   }

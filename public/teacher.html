@@ -244,14 +244,14 @@ function renderMonitor() {
   const r = S.room;
   let head, turn;
   if (r.status === 'live') {
-    head = `${r.lap}/${S.laps}바퀴 · 단어 ${r.words.length}개`;
+    head = `${r.lap}바퀴째 · 단어 ${r.words.length}개`;
     if (r.popup) turn = `<span style="color:#9fd1a8">${r.popup.num}모둠 정답! ${esc(r.popup.word)}</span>`;
     else if (r.checking) turn = `${r.current}모둠 사전 확인 중…`;
     else if (r.current == null) turn = `<span style="color:#f0a868">모든 모둠 연결 끊김 · 다시 들어오길 기다리는 중</span>`;
     else turn = `${r.current}모둠 차례 · <span class="tt" id="tt"></span>`;
   } else {
     head = '라운드 종료';
-    turn = r.lastLoser != null ? `${r.lastLoser}모둠 라운드 탈락` : `${S.laps}바퀴 모두 성공`;
+    turn = r.lastLoser != null ? `${r.lastLoser}모둠 라운드 탈락` : '라운드 종료';
   }
   const typing = (r.status === 'live' && !r.popup) ? esc(r.typing) : '';
   const list = r.order.length ? r.order : S.members;

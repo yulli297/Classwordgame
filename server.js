@@ -20,7 +20,6 @@ const STDICT_KEY = (process.env.STDICT_KEY || '').trim(); // 표준국어대사�
 const CONFIG = {
   MAX_TEAMS: 6,          // 모둠 수 (번호 1~6)
   TURN_MS: 15000,        // 한 모둠 제한시간 (모둠원이 의논할 시간 포함, 15초)
-  LAPS: 3,               // 아무도 안 틀리면 몇 바퀴 돌고 라운드 종료
   TOTAL_ROUNDS: 5,       // 전체 라운드 수
   LOSS_LIMIT: 2,         // 라운드 탈락 몇 번이면 패배
   POPUP_MS: 3500,        // 뜻 팝업 시간
@@ -184,7 +183,7 @@ function snapshot() {
   const r = game.room, now = Date.now();
   const mode = game.phase === 'lobby' ? selectedMode : game.mode;
   return {
-    phase: game.phase, round: game.round, totalRounds: CONFIG.TOTAL_ROUNDS, laps: CONFIG.LAPS,
+    phase: game.phase, round: game.round, totalRounds: CONFIG.TOTAL_ROUNDS,
     lossLimit: CONFIG.LOSS_LIMIT, maxTeams: CONFIG.MAX_TEAMS, mode, modeLabel: MODES[mode].label,
     chosung: (game.phase === 'playing' || game.phase === 'roundEnd') ? game.chosung : '',
     countdown: game.countdown, endReason: game.endReason, dictFails,
@@ -228,8 +227,7 @@ function advance(room) {
   while (true) {
     room.pos++;
     if (room.pos >= room.order.length) {
-      room.pos = 0; room.lap++;
-      if (room.lap > CONFIG.LAPS) { room.lap = CONFIG.LAPS; return endRound(room, null); }
+      room.pos = 0; room.lap++; // 바퀴 수 제한 없음: 누군가 시간 안에 못 쓸 때까지 계속 진행
     }
     const num = room.order[room.pos];
     if (isConnected(num)) return startTurn(room, num);
